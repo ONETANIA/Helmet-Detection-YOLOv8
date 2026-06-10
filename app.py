@@ -132,7 +132,7 @@ elif source == "Video":
                 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 fps = cap.get(cv2.CAP_PROP_FPS)
 
-                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                fourcc = cv2.VideoWriter_fourcc(*"avc1")
 
                 writer = cv2.VideoWriter(
                     output_video.name,
@@ -167,8 +167,7 @@ elif source == "Video":
 
                 st.subheader("Detection Result")
 
-                with open(output_video.name, "rb") as video_file:
-                    st.video(video_file.read())
+                st.video(output_video.name)
 
 # =========================
 # WEBCAM DETECTION
