@@ -2,6 +2,8 @@ import streamlit as st
 from ultralytics import YOLO
 from PIL import Image
 import tempfile
+import cv2
+import os
 
 # =========================
 # PAGE CONFIG
@@ -104,12 +106,69 @@ elif source == "Video":
 
     if uploaded_video is not None:
 
+        st.subheader("Original Video")
         st.video(uploaded_video)
 
-        st.info(
-            "Video uploaded successfully. "
-            "Video inference can be added later if needed."
-        )
+        if st.button("Run Detection"):
+
+            with st.spinner("Processing video..."):
+
+                input_video = tempfile.NamedTemporaryFile(
+                    delete=False,
+                    suffix=".mp4"
+                )
+
+                input_video.write(uploaded_video.read())
+                input_video.close()
+
+                output_video = tempfile.NamedTemporaryFile(
+                    delete=False,
+                    suffix=".mp4"
+                )
+
+                cap = cv2.VideoCapture(input_video.name)
+
+                width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                fps = cap.get(cv2.CAP_PROP_FPS)
+
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+
+                writer = cv2.VideoWriter(
+                    output_video.name,
+                    fourcc,
+                    fps,
+                    (width, height)
+                )
+
+                frame_count = 0
+
+                while cap.isOpened():
+
+                    ret, frame = cap.read()
+
+                    if not ret:
+                        break
+
+                    results = model(frame)
+
+                    annotated_frame = results[0].plot()
+
+                    writer.write(annotated_frame)
+
+                    frame_count += 1
+
+                cap.release()
+                writer.release()
+
+                st.success(
+                    f"Detection completed! Processed {frame_count} frames."
+                )
+
+                st.subheader("Detection Result")
+
+                with open(output_video.name, "rb") as video_file:
+                    st.video(video_file.read())
 
 # =========================
 # WEBCAM DETECTION
